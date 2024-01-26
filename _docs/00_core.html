@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Just some experiments with “RAG” indexing and semantic search using common toolkits like langchain, llamaindex, P">
+
+<title>semantic_retrieval - semantic_experiments</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="semantic_retrieval - semantic_experiments">
+<meta property="og:description" content="Initial Experiments on Semantic Retrieval using popular tools">
+<meta property="og:site_name" content="semantic_retrieval">
+<meta name="twitter:title" content="semantic_retrieval - semantic_experiments">
+<meta name="twitter:description" content="Initial Experiments on Semantic Retrieval using popular tools">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">semantic_retrieval</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/charlesvardeman/semantic_retrieval"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">semantic_experiments</li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#experiments-on-using-proposition-chunking-and-rag-indexing-for-semantic-search" id="toc-experiments-on-using-proposition-chunking-and-rag-indexing-for-semantic-search" class="nav-link active" data-scroll-target="#experiments-on-using-proposition-chunking-and-rag-indexing-for-semantic-search">Experiments on using Proposition Chunking and RAG indexing for semantic search</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/charlesvardeman/semantic_retrieval/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">semantic_experiments</h1>
+</div>
+
+<div>
+  <div class="description">
+    Just some experiments with “RAG” indexing and semantic search using common toolkits like langchain, llamaindex, P
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<section id="experiments-on-using-proposition-chunking-and-rag-indexing-for-semantic-search" class="level1">
+<h1>Experiments on using Proposition Chunking and RAG indexing for semantic search</h1>
+<p>This is based on the <a href="https://github.com/FullStackRetrieval-com/RetrievalTutorials/blob/main/5_Levels_Of_Text_Splitting.ipynb">5 Levels Of Text Splitting</a> notebook example for the “Agentic Text Splitting” method. It is based on the <a href="https://arxiv.org/pdf/2312.06648.pdf">Dense X Retrieval: What Retrieval Granularity Should We Use?</a> paper and has a prompt implementation in LangChain hub. Unfortunately, the LangChain hub is API walled, so I copied the prompt template to this notebook. We need to handle PDFs as a combination of text, image and tabular data for the purposes of chunking and indexing. LangChain blog has some interesting experiments on <a href="https://blog.langchain.dev/benchmarking-rag-on-tables/">Benchmarking RAG on tables</a>, <a href="https://blog.langchain.dev/multi-modal-rag-template/">Multi-modal RAG on slide decks</a> and a set of notebooks <a href="https://langchain-ai.github.io/langchain-benchmarks/notebooks/retrieval/multi_modal_benchmarking/multi_modal_eval.html?ref=blog.langchain.dev">Multi-modal eval: GPT-4 w/ multi-modal embeddings and multi-vector retriever</a>. It also appears that the there is not a single PDF library that can handle text, tables and images for proficient extraction. Rather, <a href="https://pypi.org/project/PyPDF2/">pypdf2</a> is used for text extraction, <a href="https://camelot-py.readthedocs.io/en/master/">camelot</a> for table extraction and <a href="https://pypi.org/project/pypdfium2/">pypdfium2</a> for image extraction see <a href="https://towardsdatascience.com/extracting-text-from-pdf-files-with-python-a-comprehensive-guide-9fc4003d517">Extracting Text from PDF Files with Python: A Comprehensive Guide</a>. LangChain has a set of benchmarks <a href="https://langchain-ai.github.io/langchain-benchmarks/notebooks/retrieval/intro.html">LangChain Benchmarks</a> that gives a deeper background on benchmarking. A tutorial for <a href="https://linuxhint.com/use-pdf-loader-langchain/">How to Use PDF Loaders in Langchain</a> gives a good overview of the PDF extraction process. LangChain <a href="https://python.langchain.com/docs/modules/data_connection/document_loaders/pdf">PDF Document Loaders Documentation</a> gives details.</p>
+<div id="cell-3" class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> langchain_community.document_loaders <span class="im">import</span> PyPDFLoader</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> langchain.text_splitter <span class="im">import</span> CharacterTextSplitter</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>loader <span class="op">=</span> PyPDFLoader(<span class="st">"data/DoD_Data_Strategy.pdf"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>pages <span class="op">=</span> loader.load_and_split()</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>text_splitter <span class="op">=</span> CharacterTextSplitter(chunk_size<span class="op">=</span><span class="dv">1000</span>, chunk_overlap<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>docs <span class="op">=</span> text_splitter.split_documents(pages)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-4" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>docs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>[Document(page_content='Executive Summary : DoD Data Strategy  \nUnleashing Data to Advance the National Defense Strategy  \n \nBLUF :  The DoD Data Strategy supports the National Defense Strategy and Digital \nModernization by providing the overarching vision , focus areas , guiding principles , \nessential capabilities , and goals  necessary to transform the Department into a data -centric \nenterprise. Succes s cannot be taken for granted… it is the responsibility  of all DoD leaders \nto treat data as a weapon system and manage, secure, and use data for operational effect.    \nVision : DoD is a data -centric organization that uses data at speed and scale for operational \nadvantage and increased efficiency.  \nFocus Areas :  The strategy  emphasi zes the need to work closely with users in the \noperational community , particularly the  warfighter. Initial areas of focus include:   \n- Joint All Domain Operation s – using data for advantage on the battlefield  \n- Senior Leader Decision Suppor t – using data to improve DoD management  \n- Business Analytics  – using data to drive  informed decisions at all echelons  \n8 Guiding Principles  that are foundational to all data efforts in the DoD:  \n1.) Data is a Strategic Asset  – DoD data is a high -interest commodity  and must be \nleveraged in a way that brings both immediate and lasting military advantage . \n2.) Collective Data Stewardship  – DoD must assign data stewards, data custodians, \nand a set of functional data managers to achieve accountability throughout the \nentire d ata lifecycle . \n3.) Data Ethics  – DoD must put ethics at the forefront of all thought and actions as it \nrelates to how data is collected, used, and stored.  \n4.) Data Collection  – DoD must enable electronic collection of data at the point of \ncreation and maintain the  pedigree of that data at all times . \n5.) Enterprise -Wide Data Access and Availability  – DoD data must be made available \nfor use by all authorized individuals and non -person entities through appropriate \nmechanisms . \n6.) Data for Artificial Intelligence Training  – Data sets for A.I. training and \nalgorithmic models will increasingly become the DoD’s most valuable digital \nassets and we must create a framework for managing them across the data lifecycle \nthat provides protected visibility and responsible brokerage.  \n7.) Data Fit for Purpose  – DoD must carefully consider any ethical concerns in data \ncollection, sharing, use, rapid data integration as well as minimization of any \nsources of unintended bias.  \n8.) Design for Compliance  – DoD must implement IT solutions that provide an \nopportunity to fully automate the information management lifecycle, properly \nsecure data, and maintain end -to-end records management.', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 0}),
+ Document(page_content='4 Essential Capabilities  necessary to enable all goals:  \n1.) Architectur e – DoD  architecture, enabled by enterprise cloud and other \ntechnologies, must allow pivoting on data more rapidly than adversaries are able to \nadapt.  \n2.) Standards  – DoD employs a family of standards that include not only commonly \nrecognized approaches for the management and utilization of data assets, but also \nproven and successful methods for representing and sharing data.  \n3.) Governance  – DoD data governance provides the principles, policies, processes, \nframeworks, tools, metrics, and oversight required to effectively manage data at all \nlevels, from creation to di sposition.  \n4.) Talent and Culture  – DoD workforce (Service Members, Civilians, and \nContractors at every echelon) will be increasingly empowered to work with data, \nmake data -informed decisions, create evidence -based policies, and implement \neffectual processes . \n7 Goals (aka, VAULT IS) we must achieve to become a data -centric DoD:   \n1.) Make Data Visible  – Consumers can locate the needed data.  \n2.) Make Data Accessible  – Consumers can retrieve the data.  \n3.) Make Data Understandable  – Consumers can recognize the content, context,  and \napplicability.  \n4.) Make Data  Linked  – Consumers can exploit data elements through innate \nrelationships.  \n5.) Make Data Trustworthy  – Consumers can be confident in all aspects of data for \ndecision -making.  \n6.) Make Data Interoperable  – Consumers have a common representation/  \ncomprehension of data.  \n7.) Make Data Secure  – Consumers know that data is protected from unauthorized \nuse/manipulation.  \nWay Ahead : To implement this Strategy, Components will develop measurable Data \nStrategy Implementation Plans , overseen by t he DoD CDO and  DoD Data  Council. The \ndata governance community and user communities will continue to partner to identify \nchallenges, develop solutions, and share best practices for all data  stakeholders.', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 1}),
+ Document(page_content='DoD  Data Strategy  i \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n  \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n  \n \n \n \n \n \n \n \n \n \n \n \n \n \n2020', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 2}),
+ Document(page_content="FOREWORD \nThe Department of Defense's (DoD) mission is to provide the military forces needed to deter war \nand ensure our nation's security. The DoD now recognizes that data is a strategic asset that must \nbe operationalized in order to provide a lethal and effective Joint Force that, combined with our \nnetwork of allies and partners, sustains American influence and advances shared security and \nprosperity. \nImproving data management will enhance the Department's ability to fight and win wars in an era \nof great power competition, and it will enable operators and military decision-makers to harness \ndata to capitalize on strategic and tactical opportunities that are currently unavailable. We have a \nresponsibility to gain full value from DoD capabilities and investments, thereby earning the trust \nof the operational warfighter, the U.S. Congress, and the American people. Embracing new data\xad\ndriven concepts and leveraging commercial-sector innovations will improve military operations \nand increase lethality. \nTo enable this change, the Department is adopting new technologies as part of its Digital \nModernization program -from automation to Artificial Intelligence (Al) to 5G-enabled edge \ndevices. However, the success of these efforts depends upon fueling this digital infrastructure in a \nsecure manner with the vast flows of data available from external sources, DoD systems, and \nconnected sensors and platforms. Adversaries are also racing to amass data superiority, and \nwhichever side can better leverage data will gain military advantage. Our ability to fight and win \nwars requires that we become world leaders in operationalizing and protecting our data resources \nat speed and scale. \nThe DoD Data Strategy supports Digital Modernization by providing the overarching vision, \nguiding principles, essential capabilities, goals, and objectives necessary to navigate this transition \nand transform into a data-centric enterprise. While opportunities to improve proficiency and \nefficiency are everywhere, this strategy focuses efforts on Joint Warfighting, Senior Leader \nDecision Support, and Business Analytics. Success cannot be taken for granted. The \nresponsibility of all DoD leaders is to treat data as a weapon system and manage, secure, and use \ndata for operational effect. The warfighter is counting on us to ensure that the U.S. military remains \nthe most potent and effective fighting force in the world. \nDavid L. Norquist \nDeputy Secretary of Defense \nDoD Data Strategy", metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 3}),
+ Document(page_content='DoD Data Strategy  ii  T A B L E  O F  C O N T E N T S  \n1. Introduction  ................................ ................................ ................................ ................................ ..........  1 \n1.1. Problem  Statement  ................................ ................................ ................................ ........................  2 \n1.2. Scope  ................................ ................................ ................................ ................................ .............  2 \n2. Vision and  Guiding  Principles ................................ ................................ ................................ ..............  2 \n2.1. Vision  Statement  ................................ ................................ ................................ ...........................  2 \n2.2. Guiding  Principles ................................ ................................ ................................ .........................  3 \n2.2.1.  Data is a  Strategic  Asset  ................................ ................................ ................................ ........  3 \n2.2.2.  Collecti ve Data  Stewardship  ................................ ................................ ................................ . 3 \n2.2.3.  Data Ethics  ................................ ................................ ................................ ............................  3 \n2.2.4.  Data  Collection  ................................ ................................ ................................ .....................  3 \n2.2.5.  Enterprise -Wide Data Access and  Availability  ................................ ................................ ..... 4 \n2.2.6.  Data for Artificial  Intelligence  Training  ................................ ................................ ...............  4 \n2.2.7.  Data Fit  for Purpose  ................................ ................................ ................................ ..............  4 \n2.2.8.  Design  for Compliance  ................................ ................................ ................................ .........  4 \n3. Essential Capabilities  ................................ ................................ ................................ ...........................  5 \n3.1. Architecture  ................................ ................................ ................................ ................................ ... 5 \n3.2. Standards  ................................ ................................ ................................ ................................ .......  5 \n3.3. Governance  ................................ ................................ ................................ ................................ ... 5 \n3.4. Talent and  Culture  ................................ ................................ ................................ .........................  6 \n4. Goals and  Enabling  Objectives  ................................ ................................ ................................ ............  6 \n4.1. Goal:  Make  Data  Visible  ................................ ................................ ................................ ..............  6 \n4.2. Goal:  Make  Data Accessible  ................................ ................................ ................................ ........  7 \n4.3. Goal:  Make  Data Understandable  ................................ ................................ ................................  7 \n4.4. Goal:  Make  Data Linked  ................................ ................................ ................................ ..............  8 \n4.5. Goal:  Make  Data  Trustworthy  ................................ ................................ ................................ ..... 8 \n4.6. Goal:  Make  Data Interoperable  ................................ ................................ ................................ .... 8', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 4}),
+ Document(page_content='4.6. Goal:  Make  Data Interoperable  ................................ ................................ ................................ .... 8 \n4.7. Goal:  Make  Data Secure  ................................ ................................ ................................ ..............  9 \n5. Operationalizing  the Strategy  ................................ ................................ ................................ ...............  9 \n5.1. Strengthened  Governance  ................................ ................................ ................................ ...........  10 \n5.2. Focus Areas  ................................ ................................ ................................ ................................ . 10 \n5.3. Implementation  Plans  ................................ ................................ ................................ ..................  11 \n6. Conclusion  ................................ ................................ ................................ ................................ ..........  11', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 4}),
+ Document(page_content='Page 1 DoD Data Strategy   1. I N T R O D U C T I O N \nThe DoD  Data  Strategy,  as a key component  of the Department’s  Digital  Modernization  program, \nsupports  the National  Defense  Strategy  (NDS)  by enhancing  military  effectiveness  through  access \nto accurate, timely, and secure data. In addition to combat effectiveness, DoD leaders —including \nmembers  of the Office  of the Secretary  of Defense  (OSD),  the Military  Departments,  the Office  of \nthe Chairman of the Joint Chiefs of Staff (CJCS) and the Joint Staff, Combatant Commands, \nDefense Agencies, and DoD Field Activities (referred to collectively in this strategy as \nComponents) —require data -driven insights that provide a fair an d accurate Department -wide \nrepresentation of DoD operations and  management.  \nWarfighters at all echelons require tested, secure, seamless access to data across networks, \nsupporting infrastructure, and weapon systems out to the tactical edge. The advanced ca pabilities \nprovided by DoD’s Digital Modernization program depend upon enterprise data management \npolicies, standards, and practices. Sensors and platforms across all domains must be designed, \nprocured, and exercised with open data standards as a key requi rement. Survival on the modern \nbattlefield  will depend  upon  leveraging  and making  connections  among  data from  diverse  sources, \nusing analytic tools for superior situational awareness, and coordinating information for \ndisaggregated -precision  effects.  \nThis strategy describes the problem and establishes the vision, guiding principles, essential \ncapabilities, goals, and objectives for DoD, relative to data. Figure 1 shows the relationships of \nthese different aspects to one another. The problem statement a nd scope, stated below, define the \nDepartment’s first order problem and to whom it applies. The vision statement captures the future \nstate of data. DoD will achieve its vision based on the guiding principles and focused by goals and \nobjectives. Essential c apabilities cut across goals and enumerate broad enterprise capabilities.  \nFigure 1:  DoD Data Strategy Framework', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 5}),
+ Document(page_content='Page 2 DoD Data Strategy    \n1.1. Problem  Statement  \nDoD must accelerate its progress towards becoming a data-centric1 organization. DoD has  lacked  \nthe enterprise  data management2 to ensure  that trusted,  critical  data is widely  available  to or \naccessible by mission commanders, warfighters, decision -makers, and mission partners in a real -\ntime, useable, secure,  and linked manner. This limits data -driven decisions and insights, which \nhinders the execution of swift and appropriate  action.  \nAdditionally, DoD software and hardware systems must be designed, procured, tested, upgraded, \noperated, and sustained with data  interoperability as a key requirement. All too often these gaps \nare bridged with unnecessary human -machine interfaces that introduc e complexity, delay, and \nincreased risk of error. This constrains the Department’s ability to operate against threats at \nmachine speed across all domains.  \nDoD also must improve skills in data fields necessary for effective data management. The \nDepartment must broaden efforts to assess our current talent, recruit new data experts, and retain \nour developing force while establishi ng policies to ensure that data talent is cultivated. We must \nalso spend  the time to increase  the data acumen  resident  across  the workforce  and find optimal  ways  \nto promote a culture of data  awareness.  \n \n1.2. Scope  \nThe DoD Data Strategy applies to the entire Department of Defense and its data, on whichever \nsystems that information resides.  \n \n \n2. V I S I O N  A N D  G U I D I N G  P R I N C I P L E S \n \n2.1. Vision  Statement  \nDoD is a data -centric organization that uses data at speed and \nscale for operational advantage and increased efficiency.  \n \n \n \n \n \n \n  \n \n \n \n \n \n \n1 Data -centric. An environment where data is the primary and permanent asset separated from systems/applications making data availab le to a broad range of tools \nand analytics within and across security domains for e nrichment and discovery ( derived from the IC Data Management Lexicon, Jan uary 2020).  \n \n2 Data management. The development and execution of plans, policies, programs, and practices that acquire, control, protect, an d enhance the value of data assets \nthroughout the lifecycle ( derived from the IC Data Management Lexicon, Jan uary 2020).', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 6}),
+ Document(page_content="Page 3 DoD Data Strategy    \n2.2. Guiding  Principles  \nThe Department  leverages  eight  guiding  principles  to influence  the goals,  objectives,  and essential \ncapabilities in this strategy. These guiding principles are foundational to all data efforts within \nDoD.  \n \n \n \n 2.2.1.  Data is a Strategic  Asset  \nDoD  exerts  tremendous  effort  planning  and using  traditional  strategic  assets  such as personnel, \nweapon systems, supply chain, and transportation to achieve  positive outcomes. In the same \nmanner, data in the DoD is a high -interest commodity and must be leveraged in a way that brings \nboth immediate  and lasting  military  advantage.  As DoD  shifts  to managing  its data as a critical part \nof its overall mission, it gains distinct, strategic advantages over competitors and adversaries alike. \nThese advantages will be reflected in more rapid, better -informed decisions through the  use of \ntrustworthy and integrated  data.  \n2.2.2.  Collective Data  Stewardship  \nTo exploit data fully for decision -making, DoD is defining roles and responsibilities for data \nstewardship. DoD will assign data stewards, data custodians, and a set of functional data managers \nto achieve accountability throughout the entire data lifecycle. Data stewards establ ish policies \ngoverning data access, use, protection, quality, and dissemination. Data custodians are responsible \nfor promoting the value of data and enforcing policies, and functional data managers implement \nthe policies and manage day -to-day quality.  \n2.2.3.  Data Ethics  \nThe ethical use of data will be at the forefront of all plans and actions for how data is collected, \nused, and shared. As the Secretary of Defense  stated in his guidance on AI Ethics on February 21, \n2020, “ Although  technology  changes,  the Department'  s commitment  to the Constitution,  the Law of \nWar, and the highest standards of ethical behavior does not. ” Whether for AI or advanced \nanalytics, ethical  principles  regarding  the responsible  use of data remain  important,  and they will \nbe champio ned by the DoD CDO and all data and analytics leaders across the Department. \nComponent CDOs will be responsible for promoting a culture of ethical data use supported by \noversight mechanisms to identify and promote best practices among the United States  and our \npartners.  \n2.2.4.  Data  Collection  \nRegardless of the data domain, community , or use, the challenge remains the same – to discover \nand collect data and continuously add value to best inform the decision -maker. Consequently, DoD  \nmust  enable  electronic  collection  of data at the point  of creation  and maintain  the pedigree  of that  \ndata at all times.  The moment  data is created,  it should  be tagged,  stored,  and cataloged.  When the \ndata is combined or integrated, the resulting product must also be immediately  collected, tagged, \ncurated, and appropriately secured. To expedite these processes and to minimize the risk of human \nerror, these steps should be automated to the maximum extent  possible.", metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 7}),
+ Document(page_content='Page 4 DoD Data Strategy   2.2.5.  Enterprise -Wide Data Access and  Availability  \nClosely  aligned  with data stewardship  and collection  are the accessibility  and availability  of data.  \nThis is enabled by successful implementation of enterprise capabilities, such as an enterprise cloud; \nIdentity,  Credential,  and Access  Management  (ICAM);  and associated  data-sharing  tools.  The best \ntechnology, processes, and policies will not make this successful if our workforce does not \nembrace  new cultural  norms.  As such,  DoD  is making  the cultural  shift from  the need  to know (i.e., \ninformation withholding) to the responsibility to provide (i.e., information sharing). Making data \navailable across warfighting, intelligence, and business systems is essential to gaining an \nenterprise -wide view into the daily operations of the Department and absolutely critical t o the \nsuccess of both the National Defense Strategy and the Digital Modernization Strateg y. Therefore, \nit is a fundamental DoD premise that data should be made available for use by all authorized \nindividuals and non -person entities through appropriate mech anisms. To continue this shift, \nleaders must support  this cultural  change,  set the example,  educate  their organizations,  and enforce  \ndata sharing to  ensure  that the default  posture  of DoD  is to share  information  broadly.  Data  sharing  \nshould  only be restricted when required by law  or DoD -wide policy and where security, privacy, \nor ethical considerations are involved. Furthermore, we must ensure not only that data is protected, \nbut that it is handled properly throughout its  lifecycle.  \n \n \n 2.2.6.  Data for Artific ial Intelligence  Training  \nArtificial Intelligence (AI) is a long -term data competency grounded in high -quality training - \nquality datasets (TQD) that are the pieces of information and associated labels used to build \nalgorithmic models. TQD and the algorithm ic models will increasingly become DoD’s most \nvaluable digital assets. As DoD modernizes and integrates AI technologies into joint warfighting,  \ngenerating  DoD -wide  visibility  of and access  to these  digital  assets  will be vital in an era of \nalgorithmic warfare. We must also understand that our competitors gain advantage if these assets \nbecome compromised. Therefore, the DoD Chief Data Officer (CDO) , in partnership with DoD \nComponents , will create a modern governance framework for managing the lifecycle o f the \nalgorithm models and associated data that provides protected visibility and responsible brokerage \nof these digital  assets.  \n2.2.7.  Data Fit for  Purpose  \nData  “fit for purpose ” is quality  data that is readily  discoverable  and understood  within  the context \nof its intended use. It should include careful consideration of any ethical concerns in data \ncollection, sharing, use, representation of the information intended, rapid data integration , and  \nminimization of any sources of unintended bias. Customers of DoD dat a have their own \nrequirements for accessing DoD data, which may or may not align with the purpose or intent of \nthe original  data collection.  Additionally,  in some  instances,  legislation  or a regulation  may specify \nhow data is to be used and from  which  source the data must  be consumed.  The DoD  supports  data \nexploration to enhance analyses that impact decision  making.  \n2.2.8.  Design for  Compliance  \nImplementation of IT solutions provides an opportunity to automate the information management \nlifecycle  fully , properly secure data, and maintain end -to-end records management. The \nDepartment will make data management and compliance with policies a top priority. Compliance', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 8}),
+ Document(page_content='Page 5 DoD Data Strategy   with required data policies is a critical success factor for continued funding of future  warfighting \nsolutions and will be a gate for authorizations to operate.  \n \n \n \n 3. E S S E N T I A L  C A P A B I L I T I ES  \nFour  essential  capabilities  are needed  to accomplish  the DoD  data goals.  These  capabilities  are not \nspecific to a single goal, but they are necessary to enable achievement of all goals. Only the \nrequired capabilities are  described  in this section.  Efforts  necessary  to achieve  the essential  \ncapabilities  are left to future data strategy implementation  plans.  \n3.1. Architecture  \nThis strategy emphasizes access to data and the capability to adjust requirements in stride with \nchanges in technology and data sources. DoD architecture, enabled by enterprise cloud and other \nopen -architecture capabilities, must allo w pivoting on data more rapidly than adversaries are able \nto adapt. The ability to develop and deploy lightweight applications rapidly and continuously in \nsupport of user needs revolutionizes how DoD uses data and leads to a strategic advantage. An \nagile a rchitectural approach enables incremental value to be delivered by balancing emergent \ndesign  and intentional  architecture.  This agile  approach  allows  the architecture  of data and systems \n(even a large solution) to evolve over time, while simultaneously sup porting the needs of current \nusers.  \n3.2. Standards  \nDoD employs a family of standards that include not only commonly recognized approaches for \nthe management and utilization of data assets, but also proven and successful methods for \nrepresenting and sharing da ta. Given the diversity of DoD systems, these standards should be \napplied at the earliest practical point in the data lifecycle and industry standards for an open data \narchitecture  should  be used wherever  practical . Standards  are not an end unto themselves,  but rather, \nthey provide value when enabling data and information to be readily and securely utilized and \nexchanged. Additionally, physical encoding of the data interchange specifications will allow \noperations in congested and contested environ ments. Additionally, the DoD CDO will work with \nthe Director, Operational Test and Evaluation (DOT&amp;E) , to ensure that data -related material \ncapabilities are tested and evaluated so the effectiveness and suitability of the technologies are \nknown.  \n3.3. Governan ce \nData governance provides the principles, policies, processes, frameworks, tools, metrics, and \noversight required to effectively manage data at all levels, from creation to disposition. Data \ngovernance  allows  stakeholders  to be heard  and represented  in an organized  fashion.  For DoD, data \ngovernance will be executed at cascading levels , with all issues being resolved at the lowest level \npossible. Data governance includes localized system decisions affecting data all the way through \nfull records management of critical data assets within the Department. Further, it is essential for \ndata ma nagement and records management to be properly implemented throughout the  \nDepartment.', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 9}),
+ Document(page_content='Page 6 DoD Data Strategy    \n3.4. Talent and  Culture  \nMoving the Department to a data -centric organization requires a cultural transformation with the \nDoD  workforce  at its heart.  DoD  will continue  to evolve  its decision -making  culture  to one soundly \nbased upon data and analytics enabled by technology. A modern, agile, information -advantaged \nDoD workforce (leaders, service members, civilians, and contractors) will be increasingly \nempowered t o work with data, make data -informed decisions, create evidence -based policies,  and \nimplement effectual processes. We must carefully cultivate our data talent to create and sustain \nthese capabilities. We must provide data skill training, establish centers for data engineering \nexcellence, and foster a supportive ecosystem for collaboration among data  experts.  \n \n4. G O A L S  A N D  E N A B L I N G  O B J E C T I V E S \nA core tenet of the DoD Data Strategy is the understanding that data is not an IT asset, but an  \nessential and integral part of the mission itself. Data is ubiquitous. DoD weapons platforms, \nconnected  devices,  sensors,  training  facilities,  test ranges,  and business  systems  generate  enormous \nvolumes  of data of which  all retain  and share  their data for broader  use. It is critical  that data be of \nhigh quality, accurate, complete, timely, protected, and trustworthy. As such, the Department \nmakes data a strategic asset by establishing the following  goals.  \nDoD data will be:  \n\uf0b7 Visible – Consumers can locate th e needed  data.  \n\uf0b7 Accessible – Consumers can retrieve the  data.  \n\uf0b7 Understandable – Consumers can find descriptions of data to recognize the  content, \ncontext, and  applicability.  \n\uf0b7 Linked – Consumers can exploit complementary data elements through innate \nrelationships.  \n\uf0b7 Trustworthy – Consumers can be confident in all aspects of data for  decision -making.  \n\uf0b7 Interoperable – Consumers and producers have a common representation and \ncomprehension of  data.  \n\uf0b7 Secure – Consumers know that data is protected from unauthorized use and \nmanipulation.  \n \n4.1. Goal:  Make Data  Visible  \nThe goal of making data visible enables authorized users to discover the existence of data that is \nof particular  interest  or value.  Data  stewards,  data custodians,  and functional  data managers  are all \nresponsible  and obligated  to make  their data visible  to authorized  users  by identifying,  registering, \nand exposing data in a way that makes it easily discoverable across the enterprise, and to external \npartners as appropriate. Moving towards this t ype of data visibility allows users (person and non - \nperson entities) to discover and rapidly identify who is responsible for specific data assets, the \nlocation  of data assets,  the types  of data assets  available,  and the means  of accessing  the data assets.  \nDoD will know it has made progress on making data visible when:  \nObjective 1:  Data is advertised and available for authorized users when and where needed.  \nObjective 2: DoD implements metadata standards includ ing location and access methods \nfor shared data.', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 10}),
+ Document(page_content='Page 7 DoD Data Strategy   Objective 3:  All DoD data sources are catalogued.  \nObjective 4:  DoD implements common services to publish, search, and discover data.  \nObjective 5: Warfighting and business governance bodies make decisions based on live \nvisualizations of near real -time data.  \n \n4.2. Goal:  Make Data  Accessible  \nThe goal of making data accessible enables authorized users to obtain the data they need when \nthey need it, including having data automatically pushed to intereste d and authorized users. Data \naccessibility must comply with Public Law (P.L.) 115 -435, the Foundations for Evidence -Based \nPolicymaking Act of 2018. DoD is making data, including warfighting, intelligence, and business \ndata, accessible to authorized users. Accessibility requires that protective mechanisms (e.g., \nsecurity controls) are in place for credentialed users to ensure that access is permitted in accordance \nwith laws, regulations, and policies.  \nDoD will know it has made progress on making data accessi ble when:  \nObjective 1: Data is accessible through documented standard Application Programming \nInterfaces (APIs).  \nObjective 2: Common platforms and services create, retrieve, share, utilize, and manage \ndata.  \nObjective 3:  Data access and sharing is controll ed through reusable APIs.  \n \n \n4.3. Goal:  Make Data  Understandable  \nUnderstanding  data is critical  to enable  enhanced,  more  accurate,  and timely  decision -making.  The \ninability  to aggregate,  compare,  and truly  understand  data adversely affects  the ability  of the \nDepartment  to react  and respond.  Without  proper  context,  interpretation  and analysis  of the data \ncould  be flawed, resulting in potentially fatal outcomes. Bringing together business and technology \nand applying a data -centric approach enable massive amounts of data to be transformed into the \ninsights needed to lead DoD  more effectively and efficiently . \nDoD will  know it has made progress on making data understandable when:  \nObjective 1: Data is presented in a way that preserves semantic meaning and is expressed in \na standardized manner throughout DoD.  \nObjective 2: DoD utilizes a common data syntax for the same data types and includes \nsemantic metadata with data assets.  \nObjective 3: Data elements are aligned into a comprehensive data dictionary with a \ncontrolled, yet flexible, vocabulary and taxonomy.  \nObjective 4: Data is baselined and inventoried in comprehensiv e data catalogs with \nrelevant information on purpose, ownership, points of contact, security, \nstandards, interfaces, limitations, and restrictions on use.  \nObjective 5: DoD has processes to create, align, implement, and manage business \nvocabularies, includi ng enterprise standards.', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 11}),
+ Document(page_content='Page 8 DoD Data Strategy   Objective 6: Adaptive, intelligent systems monitor data streams and identify opportunities \nto transform, combine, or derive new data providing increased insights.  \n \n4.4. Goal:  Make Data  Linked  \nData -driven decision -making requires DoD data to be linked such that relationships and \ndependencies  can be uncovered  and maintained.  Adhering  to industry  best-practices  for open  data \nstandards, data catalogs, and metadata tagging, the Department ensures that connections across \ndispar ate sources can be made and leveraged for  analytics.  \nDoD will know it has made progress on making data linked when:  \nObjective 1: DoD implements globally unique identifiers so data can be easily discovered, \nlinked, retrieved, and referenced.  \nObjective 2: DoD utilizes common metadata standards that allow data to be joined and \nintegrated.  \n \n4.5. Goal:  Make Data  Trustworthy  \nDoD data requires trust to deliver the needed value to its Service members, civilians, and \nstakeholders. Lacking confidence in the data may result in less timely decision -making or, \nconsequently, no decision when one is warranted.  \nDoD will know it has made progress toward making data trustworthy when:  \nObjective 1: DoD budget requests and the supporting budget process integrate data -focused \nevidence and Learning Agendas (see P.L. 115 -435).  \nObjective 2: DoD data has protection, lineage, and pedigree metadata bound throughout its \nlifecycle.  \nObjective 3: DoD executes data quality management techniques to assess and enhance data \nquality.  \nObjective 4 : DoD implements master data management for business, intelligence, and \nwarfighting data.  \nObjective 5: DoD properly tags and maintains all appropriate data and records in \naccordance with established processes and policies.  \n \n4.6. Goal:  Make Data  Interoperable  \nProperly exchanging data between systems and maintaining semantic understanding are critical  \nfor successful decision -making and joint military operations. Achieving semantic as well as  \nsyntactic interoperability  using  common  data formats  and machine -to-machine  communications  \naccelerates advanced algorithm development and provides a strategic advantage to the  Department.  \nDoD will know it has made progress toward making data interoperable when:  \nObjective 1: DoD documents and implements data exch ange specifications for all systems , \nincluding those of coalition partners.', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 12}),
+ Document(page_content='Page 9 DoD Data Strategy   Objective 2: Exchange specifications contain required metadata and convey standardized \nsemantic meaning with the data set.  \nObjective 3:  Public data assets are machine -readable and available for consumption.  \nObjective 4: DoD rapidly mediates differing data standards and formats without mission - \ncritical loss of fidelity, precision, or accuracy.  \nObjective 5: DoD develops and promulgates a data -tagging strategy and  subsequent \nimplementation plan to enable data interoperability.  \n \n4.7. Goal:  Make Data  Secure  \nAs per the DoD  Cyber  Risk Reduction  Strategy,  protecting  DoD  data while  at rest, in motion,  and \nin use (within applications, with analytics, etc.) is a minimum barrier to entry for future combat \nand weapon systems. Using a disciplined approach to data protection, such as attribute -based \naccess  control,  across  the enterprise  allows  DoD  to maximize  the use of data while,  at the same time, \nemploying the most stringe nt security standards to protect the American  people.  \nDoD will know it has made progress toward making data secure when:  \nObjective 1: Granular privilege management (identity, attributes, permissions, etc .) is \nimplemented to govern the access  to, use of, and disposition of data.  \nObjective 2: Data stewards regularly assess classification criteria and test compliance to \nprevent security issues resulting from data aggregation.  \nObjective 3: DoD implements approved standards for security markings, handling \nrestri ctions, and records management.  \nObjective 4: Classification and control markings are defined and implemented; content and \nrecord retention rules are developed and implemented.  \nObjective 5: DoD implements data loss prevention technology to prevent unintende d release \nand disclosure of data.  \nObjective 6:  Only authorized users are able to access and share data.  \nObjective 7: Access and handling restriction metadata are bound to data in an immutable \nmanner.  \nObjective 8:  Access, use, and disposition of data are fully audited.  \n \n \n5. O P E R A T I O N A L I Z I N G  T H E  S T R A T E G Y \nOperationalizing  the principles  in this Strategy  is an enduring  Department -wide  effort.  Initial  areas \nfor early progress include strengthening data governance, focused engagement in key mission \nareas, and the execution of detailed Component implementation  plans.', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 13}),
+ Document(page_content='Page 10 DoD Data Strategy    \n5.1. Strengthened  Governance  \nStrengthened data governance will include increased oversight at multiple levels. The Office of \nthe DoD CDO will govern the Department’ s data management efforts and ensure sustained focus \nby DoD  leaders.  The DoD  CIO will ensure  that data priorities  are fully  integrated  into the DoD  \nDigital Modernization  program,  ensuring  synchronization  with DoD’s  cloud ; AI; Command,  \nControl,  and Communications (C3) ; and cybersecurity efforts. The DoD CIO will also promote \ncompliance with CDO guidance via CIO authorities for managing IT investments, issuing DoD \npolicy, and certifying Service/component  budgets.  \nThe CDO Council, chaired by the DoD CD O, will serve as the primary venue for collaboration \namong data officers from across the Department. This body will identify and prioritize data \nchallenges, develop solutions, and oversee policy and data standards of the Department. While \nworking closely w ith the appropriate governance bodies, members of the CDO Council must also \nadvocate that data considerations be made an integral part of all the Department’s requirements, \nresearch, procurement, budgeting, and manpower decisions.  \n \n5.2. Focus  Areas  \nData polici es and standards alone cannot strengthen data management or improve data quality. \nThey  must  be continuously  informed  by feedback  from  users  who consume,  produce,  manage,  and \ngovern data with particular emphasis given to the operational community and warfighter needs. \nFor this reason, the Department must utilize ongoing initiatives in key mission areas to rapidly \napply the Strategy’s data principles and quickly generate les sons learned. Although data is critical \nto every DoD mission, initial areas of focus include: Joint All -Domain Operations, business \nanalytics, and senior leader decision  support.  \nJoint All -Domain Operations: As part of the National Defense Strategy’s focus  on great power \ncompetition and conflict, the Secretary has directed the Joint Staff and Military Departments \n(MILDEPs) to develop new concepts for coordinating military effects in an all -domain fight. The \ndata governance  community  must  closely  partner  with the Joint  All-Domain  Command  and Control \n(JADC2) Cross -Functional Team (CFT), the Joint Artificial Intelligence Center (JAIC), and the \nDeputy CIO for C3 to ensure that we can coordinate information with the tactical edge in a highly  \ncontested  environment.  Clear  data standards  and interoperability  requirements  for JADC2  directly \nsupport future military readiness. The integrated JADC2 exercises led by the Joint Staff will \nprovide  real-world  outcomes  that will aid in prioritizing  data gaps,  as will lessons  from  the Army’s \nwork on data design principles and similar efforts by the other  MILDEPs.  \nWhen new data gaps are identified, the data governance community must work with mission area \nmanagers  to determine  whether  changes  are needed  to hardware;  software;  tactics,  techniques,  and \nprocedures; or risk acceptance. The mitigation of many legacy systems is not cost -effective, \nmaking it imperative that all future systems are procured with data -interoperability, software \nupgradability,  and cloud -readines s as requirements.  The DoD  CDO,  along  with Component  CDOs , \nmust  also ensure  that operational  users  remain  informed  of new data-enabled  capabilities  from  the \ncommercial sector and DoD research. Ultimately, DoD’s transition to a data -centric organization \ndepends on effective feedback between the data governance and operational communit ies, and the \ntrusted collaboration this  entails.', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 14}),
+ Document(page_content='Page 11 DoD Data Strategy   Senior Leader Decision Support: Senior leaders, including the Deputy Secretary, have directed \nthe development of clear, quantifiable metrics to inform a wide -range of management decisions, \nsuch as options for implementing the National Defense Strategy. The data community must \nsupport  efforts  to provide  current,  decision -quality  data along  with a platform  of tools  for analysis \nand visualization. This approach will accelerate the Department’s transition to using live, \ninteractive data in place of static slides to inform strategic  outcomes.  \nBusiness Analytics: The DoD Comptroller, working with the Chief Management Office r (CMO) \nand others, is leading an effort to ingest, analyze, and display a wide range of business data; this \nincludes information on budget, procurement, inventory, logistics, and personnel. The data \ngovernance  community  will use the insights  from  this effort to inform  their policies  on issues  such \nas authoritative  data sources,  consistent  metadata  labeling,  standard  taxonomies,  data provenance, \nand interfaces (e.g. , APIs). This effort could also foster migration to a common data platform for \nall business analytics across the  Department.  \n \n5.3. Implementation  Plans  \nTo implement this Strategy, Components will develop or convert their extant Data Strategies into \nmeasurable D ata Strategy Implementation Plans. The CDO Council will support this effort with  a \ncommon lexicon and common metrics/measures of performance for these plans. This  information \nwill be used to identify milestones, track progress, and illustrate data improvem ents for \nstakeholders.  \n \n \n6. C O N C L U S I O N \nData  underpins  digital  modernization  and is increasingly  the fuel of every  DoD  process,  algorithm, \nand weapon  system.  The DoD  Data  Strategy  describes  an ambitious  approach  for transforming  the \nDepartment into a data-driven organization. This requires strong and effective data management \ncoupled with close partnerships with users, particularly warfighters. Every leader must treat data \nas a weapon system, stewarding data throughout its lifecycle and ensuring it is made available to \nothers.  The Department  must  provide  its personnel  with the modern  data skills  and tools  to preserve  \nU.S. military advantage in day -to-day competition and ensure that they can prevail in conflict.', metadata={'source': 'data/DoD_Data_Strategy.pdf', 'page': 15})]</code></pre>
+</div>
+</div>
+<div id="cell-5" class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> langchain.output_parsers.openai_tools <span class="im">import</span> JsonOutputToolsParser</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> langchain_community.chat_models <span class="im">import</span> ChatOpenAI</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> langchain_core.prompts <span class="im">import</span> ChatPromptTemplate</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> langchain_core.runnables <span class="im">import</span> RunnableLambda</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> langchain.chains <span class="im">import</span> create_extraction_chain</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Optional, List</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> langchain.chains <span class="im">import</span> create_extraction_chain_pydantic</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> langchain_core.pydantic_v1 <span class="im">import</span> BaseModel</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-7" class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>PromptTemplate <span class="op">=</span> ChatPromptTemplate.from_messages(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                (</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"system"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"""</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="st">                    Decompose the "Content" into clear and simple propositions, ensuring they are interpretable out of context.</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="st">                        1. Split compound sentence into simple sentences. Maintain the original phrasing from the input whenever possible.</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="st">                        2. For any named entity that is accompanied by additional descriptive information, separate this information into its own distinct proposition.</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="st">                        3. De-contextualize the proposition by adding necessary modifier to nouns or entire sentences and replacing pronouns (e.g., "it", "he", "she", "they", "this", "that") with the full name of the entities they refer to.</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="st">                        4. Present the results as a list of strings, formatted in JSON.</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="st">                    Example:</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="st">                        Input: Title: ¯Eostre. Section: Theories and interpretations, Connection to Easter Hares. Content: The earliest evidence for the Easter Hare (Osterhase) was recorded in south-west Germany in 1678 by the professor of medicine Georg Franck von Franckenau, but it remained unknown in other parts of Germany until the 18th century. Scholar Richard Sermon writes that "hares were frequently seen in gardens in spring, and thus may have served as a convenient explanation for the</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="st">                        origin of the colored eggs hidden there for children. Alternatively, there is a European tradition that hares laid eggs, since a hare’s scratch or form and a lapwing’s nest look very similar, and both occur on grassland and are first seen in the spring. In the nineteenth century the influence of Easter cards, toys, and books was to make the Easter Hare/Rabbit popular throughout Europe. German immigrants then exported the custom to Britain and America where it evolved into the Easter Bunny."</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="st">                        Output: [ "The earliest evidence for the Easter Hare was recorded in south-west Germany in 1678 by Georg Franck von Franckenau.", "Georg Franck von Franckenau was a professor of medicine.", "The evidence for the Easter Hare remained unknown in other parts of Germany until the 18th century.", "Richard Sermon was a scholar.", "Richard Sermon writes a hypothesis about the possible explanation for the connection between hares and the tradition during Easter", "Hares</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="st">                        were frequently seen in gardens in spring.", "Hares may have served as a convenient explanation for the origin of the colored eggs hidden in gardens for children.", </span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="st">                        "There is a European tradition that hares laid eggs.", "A hare’s scratch or form and a lapwing’s nest look very similar.", "Both hares and lapwing’s nests occur on grassland and are first seen in the spring.", </span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="st">                        "In the nineteenth century the influence of Easter cards, toys, and books was to make the Easter Hare/Rabbit popular throughout Europe.", "German immigrants exported the custom of the Easter Hare/Rabbit to Britain and America.", </span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="st">                        "The custom of the Easter Hare/Rabbit evolved into the Easter Bunny in Britain and America."]</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="st">                    """</span>,</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>                ),</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>                (<span class="st">"user"</span>, <span class="st">"Decompose the following:</span><span class="ch">\n</span><span class="sc">{input}</span><span class="ch">\n</span><span class="st">`"</span>),</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-8" class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>llm <span class="op">=</span> ChatOpenAI(model<span class="op">=</span><span class="st">'gpt-4-1106-preview'</span>, openai_api_key <span class="op">=</span> os.getenv(<span class="st">"OPENAI_API_KEY"</span>, <span class="st">'YouKey'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/cvardema/miniforge3/envs/taitac/lib/python3.9/site-packages/langchain_core/_api/deprecation.py:117: LangChainDeprecationWarning: The class `langchain_community.chat_models.openai.ChatOpenAI` was deprecated in langchain-community 0.0.10 and will be removed in 0.2.0. An updated version of the class exists in the langchain-openai package and should be used instead. To use it run `pip install -U langchain-openai` and import as `from langchain_openai import ChatOpenAI`.
+  warn_deprecated(</code></pre>
+</div>
+</div>
+<div id="cell-9" class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># use it in a runnable</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>runnable <span class="op">=</span> PromptTemplate <span class="op">|</span> llm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-10" class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pydantic data class</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Sentences(BaseModel):</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    sentences: List[<span class="bu">str</span>]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraction</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>extraction_chain <span class="op">=</span> create_extraction_chain_pydantic(pydantic_schema<span class="op">=</span>Sentences, llm<span class="op">=</span>llm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/charlesvardeman/semantic_retrieval/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
